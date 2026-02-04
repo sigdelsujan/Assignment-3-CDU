@@ -1,28 +1,15 @@
 import tkinter as tk
-from tkinter import filedialog
+from tkinter import filedialog, simpledialog
 import cv2
+
 from image_processor import ImageProcessor
 from gui import ImageEditorGUI
-
-import tkinter.simpledialog as sd
-from tkinter import messagebox
 
 class AppController:
     def __init__(self, root):
         self.processor = ImageProcessor()
         self.gui = ImageEditorGUI(root, self)
         self.filepath = ""
-
-
-
-
-    def resize_image(self):
-        width = sd.askinteger("Resize", "Enter new width:")
-        height = sd.askinteger("Resize", "Enter new height:")
-        if width and height:
-            img = self.processor.resize(width, height)
-            self.gui.display_image(img)
-
 
     def open_image(self):
         self.filepath = filedialog.askopenfilename(
@@ -42,31 +29,46 @@ class AppController:
             cv2.imwrite(path, self.processor.image)
 
     def grayscale(self):
-        self.gui.display_image(self.processor.grayscale())
+        img = self.processor.grayscale()
+        self.gui.display_image(img)
+
+    def edges(self):
+        img = self.processor.edge_detect()
+        self.gui.display_image(img)
 
     def blur(self, value):
         k = int(value)
         if k % 2 == 0:
             k += 1
-        self.gui.display_image(self.processor.blur(k))
-
-    def edges(self):
-        self.gui.display_image(self.processor.edge_detect())
+        img = self.processor.apply_blur(k)
+        self.gui.display_image(img)
 
     def brightness(self, value):
-        self.gui.display_image(self.processor.adjust_brightness(int(value)))
+        img = self.processor.apply_brightness(int(value))
+        self.gui.display_image(img)
+
+    def contrast(self, value):
+        img = self.processor.apply_contrast(float(value))
+        self.gui.display_image(img)
 
     def rotate(self, angle):
-        self.gui.display_image(self.processor.rotate(angle))
+        img = self.processor.rotate(angle)
+        self.gui.display_image(img)
 
     def flip(self, mode):
-        self.gui.display_image(self.processor.flip(mode))
+        img = self.processor.flip(mode)
+        self.gui.display_image(img)
+
+    def resize_image(self):
+        width = simpledialog.askinteger("Resize", "Enter new width:")
+        height = simpledialog.askinteger("Resize", "Enter new height:")
+        if width and height:
+            img = self.processor.resize(width, height)
+            self.gui.display_image(img)
 
     def undo(self):
-        self.gui.display_image(self.processor.reset())
-
-    def redo(self):
-        pass
+        img = self.processor.reset()
+        self.gui.display_image(img)
 
 if __name__ == "__main__":
     root = tk.Tk()
