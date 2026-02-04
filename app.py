@@ -4,11 +4,25 @@ import cv2
 from image_processor import ImageProcessor
 from gui import ImageEditorGUI
 
+import tkinter.simpledialog as sd
+from tkinter import messagebox
+
 class AppController:
     def __init__(self, root):
         self.processor = ImageProcessor()
         self.gui = ImageEditorGUI(root, self)
         self.filepath = ""
+
+
+
+
+    def resize_image(self):
+        width = sd.askinteger("Resize", "Enter new width:")
+        height = sd.askinteger("Resize", "Enter new height:")
+        if width and height:
+            img = self.processor.resize(width, height)
+            self.gui.display_image(img)
+
 
     def open_image(self):
         self.filepath = filedialog.askopenfilename(
