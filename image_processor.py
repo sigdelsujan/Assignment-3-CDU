@@ -1,5 +1,4 @@
 import cv2
-import numpy as np
 
 class ImageProcessor:
     def __init__(self):
@@ -15,7 +14,6 @@ class ImageProcessor:
         self.image = self.original.copy()
         return self.image
 
-    # ----- EFFECTS (NON-DESTRUCTIVE) -----
 
     def apply_blur(self, ksize):
         temp = self.original.copy()
@@ -36,14 +34,17 @@ class ImageProcessor:
         self.image = temp
         return self.image
 
+
     def grayscale(self):
-        temp = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
-        self.image = cv2.cvtColor(temp, cv2.COLOR_GRAY2BGR)
+        gray = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
+        self.image = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
+        self.original = self.image.copy()
         return self.image
 
     def edge_detect(self):
         edges = cv2.Canny(self.image, 100, 200)
         self.image = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
+        self.original = self.image.copy()
         return self.image
 
     def rotate(self, angle):
