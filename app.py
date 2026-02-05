@@ -1,93 +1,91 @@
 import tkinter as tk
-from PIL import Image, ImageTk
+from tkinter import filedialog, simpledialog
 import cv2
 
-class ImageEditorGUI:
-    def __init__(self, root, controller):
-        self.root = root
-        self.controller = controller
+from image_processor import ImageProcessor
+from gui import ImageEditorGUI
 
-        self.root.title("Image Editor – Group Assignment 3")
-        self.root.geometry("1000x600")
+class AppController:
+    def __init__(self, root):
+        self.processor = ImageProcessor()
+        self.gui = ImageEditorGUI(root, self)
+        self.filepath = ""
 
-        self.create_menu()
-        self.create_layout()
+    def open_image(self):
+        self.filepath = filedialog.askopenfilename(
+            filetypes=[("Images", "*.jpg *.png *.bmp")]
+        )
+        if self.filepath:
+            img = self.processor.load_image(self.filepath)
+            self.gui.display_image(img, self.filepath)
 
-        self.status_text = tk.StringVar()
-        self.status_bar = tk.Label(root, textvariable=self.status_text,
-                                   relief=tk.SUNKEN, anchor="w")
-        self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
+    def save_image(self):
+        if self.filepath:
+            cv2.imwrite(self.filepath, self.processor.image)
 
-    def create_menu(self):
-        menu = tk.Menu(self.root)
+    def save_as(self):
+        filetypes = [
+            ("JPEG Image", "*.jpg"),
+            ("PNG Image", "*.png"),
+            ("BMP Image", "*.bmp")
+        ]
 
-        file_menu = tk.Menu(menu, tearoff=0)
-        file_menu.add_command(label="Open", command=self.controller.open_image)
-        file_menu.add_command(label="Save", command=self.controller.save_image)
-        file_menu.add_command(label="Save As", command=self.controller.save_as)
-        file_menu.add_separator()
-        file_menu.add_command(label="Exit", command=self.root.quit)
+        path = filedialog.asksaveasfilename(
+            title="Save Image As",
+            filetypes=filetypes,
+            defaultextension=".png"
+        )
 
-        edit_menu = tk.Menu(menu, tearoff=0)
-        edit_menu.add_command(label="Undo", command=self.controller.undo)
-        edit_menu.add_command(label="Redo", command=self.controller.redo)
+        if path:
+            cv2.imwrite(path, self.processor.image)
 
-        menu.add_cascade(label="File", menu=file_menu)
-        menu.add_cascade(label="Edit", menu=edit_menu)
+    def grayscale(self):
+        img = self.processor.grayscale()
+        self.gui.display_image(img)
 
-        self.root.config(menu=menu)
+    def edges(self):
+        img = self.processor.edge_detect()
+        self.gui.display_image(img)
 
-    def create_layout(self):
-        self.canvas = tk.Label(self.root)
-        self.canvas.pack(side=tk.LEFT, padx=10, pady=10)
+    def blur(self, value):
+        k = int(value)
+        if k % 2 == 0:
+            k += 1
+        img = self.processor.apply_blur(k)
+        self.gui.display_image(img)
 
-        panel = tk.Frame(self.root)
-        panel.pack(side=tk.RIGHT, fill=tk.Y, padx=15)
+    def brightness(self, value):
+        img = self.processor.apply_brightness(int(value))
+        self.gui.display_image(img)
 
-        tk.Label(panel, text="Basic Effects", font=("Arial", 10, "bold")).pack(pady=5)
-        tk.Button(panel, text="Grayscale",
-                  command=self.controller.grayscale).pack(fill=tk.X)
-        tk.Button(panel, text="Edge Detection",
-                  command=self.controller.edges).pack(fill=tk.X)
+    def contrast(self, value):
+        img = self.processor.apply_contrast(float(value))
+        self.gui.display_image(img)
 
-        tk.Label(panel, text="Adjustments", font=("Arial", 10, "bold")).pack(pady=10)
+    def rotate(self, angle):
+        img = self.processor.rotate(angle)
+        self.gui.display_image(img)
 
-        tk.Label(panel, text="Blur").pack()
-        self.blur_slider = tk.Scale(panel, from_=1, to=21, orient=tk.HORIZONTAL)
-        self.blur_slider.pack(fill=tk.X)
-        self.blur_slider.bind("<ButtonRelease-1>", 
-                      lambda e: self.controller.blur(self.blur_slider.get())) # to save state after slider is letgo by user
+    def flip(self, mode):
+        img = self.processor.flip(mode)
+        self.gui.display_image(img)
 
-        tk.Label(panel, text="Brightness").pack()
-        self.brightness_slider = tk.Scale(panel, from_=-100, to=100, orient=tk.HORIZONTAL)
-        self.brightness_slider.pack(fill=tk.X)
-        self.brightness_slider.bind("<ButtonRelease-1>", 
-                            lambda e: self.controller.brightness(self.brightness_slider.get()))
+    def resize_image(self):
+        width = simpledialog.askinteger("Resize", "Enter new width:")
+        height = simpledialog.askinteger("Resize", "Enter new height:")
+        if width and height:
+            img = self.processor.resize(width, height)
+            self.gui.display_image(img)
 
-        tk.Label(panel, text="Contrast").pack()
-        self.contrast_slider = tk.Scale(panel, from_=0.5, to=3.0, resolution=0.1, orient=tk.HORIZONTAL)
-        self.contrast_slider.pack(fill=tk.X)
-        self.contrast_slider.bind("<ButtonRelease-1>", 
-                          lambda e: self.controller.contrast(self.contrast_slider.get()))
+    def undo(self):
+        img = self.processor.undo()
+        self.gui.display_image(img)
 
-        tk.Label(panel, text="Transform", font=("Arial", 10, "bold")).pack(pady=10)
+    def redo(self):
+        img = self.processor.redo()
+        self.gui.display_image(img)
 
-        tk.Button(panel, text="Rotate 90°",
-                  command=lambda: self.controller.rotate(90)).pack(fill=tk.X)
-        tk.Button(panel, text="Rotate 180°",
-                  command=lambda: self.controller.rotate(180)).pack(fill=tk.X)
-        tk.Button(panel, text="Flip Horizontal",
-                  command=lambda: self.controller.flip("horizontal")).pack(fill=tk.X)
-        tk.Button(panel, text="Resize",
-                  command=self.controller.resize_image).pack(fill=tk.X)
-
-    def display_image(self, img, filename=""):
-        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        img_pil = Image.fromarray(img_rgb)
-        img_tk = ImageTk.PhotoImage(img_pil)
-
-        self.canvas.config(image=img_tk)
-        self.canvas.image = img_tk
-
-        h, w, _ = img.shape
-        self.status_text.set(f"{filename} | {w} x {h}")
+if __name__ == "__main__":
+    root = tk.Tk()
+    AppController(root)
+    root.mainloop()
