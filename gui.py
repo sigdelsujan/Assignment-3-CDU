@@ -30,6 +30,7 @@ class ImageEditorGUI:
 
         edit_menu = tk.Menu(menu, tearoff=0)
         edit_menu.add_command(label="Undo", command=self.controller.undo)
+        edit_menu.add_command(label="Redo", command=self.controller.redo)
 
         menu.add_cascade(label="File", menu=file_menu)
         menu.add_cascade(label="Edit", menu=edit_menu)
@@ -52,23 +53,22 @@ class ImageEditorGUI:
         tk.Label(panel, text="Adjustments", font=("Arial", 10, "bold")).pack(pady=10)
 
         tk.Label(panel, text="Blur").pack()
-        self.blur_slider = tk.Scale(panel, from_=1, to=21,
-                                    orient=tk.HORIZONTAL,
-                                    command=self.controller.blur)
+        self.blur_slider = tk.Scale(panel, from_=1, to=21, orient=tk.HORIZONTAL)
         self.blur_slider.pack(fill=tk.X)
+        self.blur_slider.bind("<ButtonRelease-1>", 
+                      lambda e: self.controller.blur(self.blur_slider.get())) # to save state after slider is letgo by user
 
         tk.Label(panel, text="Brightness").pack()
-        self.brightness_slider = tk.Scale(panel, from_=-100, to=100,
-                                          orient=tk.HORIZONTAL,
-                                          command=self.controller.brightness)
+        self.brightness_slider = tk.Scale(panel, from_=-100, to=100, orient=tk.HORIZONTAL)
         self.brightness_slider.pack(fill=tk.X)
+        self.brightness_slider.bind("<ButtonRelease-1>", 
+                            lambda e: self.controller.brightness(self.brightness_slider.get()))
 
         tk.Label(panel, text="Contrast").pack()
-        self.contrast_slider = tk.Scale(panel, from_=0.5, to=3.0,
-                                        resolution=0.1,
-                                        orient=tk.HORIZONTAL,
-                                        command=self.controller.contrast)
+        self.contrast_slider = tk.Scale(panel, from_=0.5, to=3.0, resolution=0.1, orient=tk.HORIZONTAL)
         self.contrast_slider.pack(fill=tk.X)
+        self.contrast_slider.bind("<ButtonRelease-1>", 
+                          lambda e: self.controller.contrast(self.contrast_slider.get()))
 
         tk.Label(panel, text="Transform", font=("Arial", 10, "bold")).pack(pady=10)
 
